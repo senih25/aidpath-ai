@@ -1,0 +1,73 @@
+name: Build WebMCP Demo Video
+
+on:
+  push:
+    paths:
+      - '.github/workflows/build-webmcp-demo.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install media tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg espeak-ng
+
+      - name: Capture live product screens
+        run: |
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --window-size=1280,720 --screenshot=/tmp/hero.png 'https://senih25.github.io/aidpath-ai/webmcp.html'
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --window-size=1280,720 --screenshot=/tmp/demo.png 'https://senih25.github.io/aidpath-ai/webmcp.html#demo'
+          test -s /tmp/hero.png
+          test -s /tmp/demo.png
+
+      - name: Generate English narration
+        run: |
+          cat > /tmp/narration.txt <<'EOF'
+          Hello. This is AidPath Agent Bridge, a WebMCP-native support navigator for rule-heavy public-service experiences. Without a capability layer, an AI agent has to scrape rendered text, infer what form fields mean, and automate brittle clicks. AidPath takes a different approach: humans keep control of the facts, while agents receive reliable typed tools.
+
+          The architecture has three clear boundaries. A small local classifier interprets free text. Explicit deterministic rules evaluate the illustrative support conditions. WebMCP is only the orchestration layer. The agent never invents or overrides an eligibility condition, and the application has no backend or stored user profile.
+
+          In a WebMCP-enabled browser, AidPath registers six tools with document modelContext registerTool. An agent can list support options, analyze a structured case, explain one option, compare multiple options, load a safe demo case, and prepare a next-step checklist. Every tool has a JSON Schema contract, and read-only operations are annotated as read-only.
+
+          Here is the student renter scenario. The person can enter the facts directly, or an agent can load the same demo through WebMCP. The shared deterministic engine ranks Student Stability Bridge first, with all three demo conditions matched. The result remains visible so the human can inspect or correct the facts.
+
+          The agent can then compare Student Stability Bridge with Housing Stability Support without scraping result cards. Housing support is missing one condition: core documents ready. The checklist tool turns that explicit gap into a next step, and agent activity is recorded visibly for the human to audit.
+
+          This is why WebMCP changes the experience. The website exposes stable domain capabilities while preserving human review and deterministic decision logic. The current support programs are illustrative only. A production system can attach verified official sources, effective dates, versioned rules, and human approval. AidPath Agent Bridge: stop scraping, start collaborating.
+          EOF
+          espeak-ng -v en-us -s 158 -p 48 -a 110 -f /tmp/narration.txt -w /tmp/narration.wav
+          test -s /tmp/narration.wav
+
+      - name: Render public demo MP4
+        run: |
+          mkdir -p demo
+          ffmpeg -y \
+            -loop 1 -t 32 -i /tmp/hero.png \
+            -loop 1 -t 72 -i /tmp/demo.png \
+            -loop 1 -t 35 -i /tmp/hero.png \
+            -i /tmp/narration.wav \
+            -filter_complex "[0:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,fps=20[v0];[1:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,fps=20[v1];[2:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,fps=20[v2];[v0][v1][v2]concat=n=3:v=1:a=0[v]" \
+            -map "[v]" -map 3:a \
+            -c:v libx264 -preset veryslow -crf 32 -pix_fmt yuv420p \
+            -c:a aac -b:a 48k -movflags +faststart -shortest \
+            demo/aidpath-agent-bridge-webmcp-demo.mp4
+          test -s demo/aidpath-agent-bridge-webmcp-demo.mp4
+          ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 demo/aidpath-agent-bridge-webmcp-demo.mp4
+
+      - name: Publish generated video into repository
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add demo/aidpath-agent-bridge-webmcp-demo.mp4
+          git commit -m 'demo: publish WebMCP challenge video [skip ci]'
+          git pull --rebase origin main
+          git push origin HEAD:main
