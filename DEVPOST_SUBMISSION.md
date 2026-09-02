@@ -1,63 +1,102 @@
-# AidPath AI
+# AidPath Agent Bridge
 
-**Tagline:** Explainable AI that turns confusing support rules into a clear next step — without sending sensitive inputs to a server.
+**Tagline:** Humans keep control. Agents get reliable tools.
 
 ## Inspiration
 
-People seeking social assistance often have to interpret long eligibility rules at the exact moment they have the least time and attention to spare. AI can simplify language, but using an opaque model as the final eligibility decision-maker creates a new trust problem.
+Web agents are powerful, but rule-heavy public-service websites expose an awkward interface to them: rendered labels, forms, changing layouts, and long eligibility-style descriptions. An agent can try to scrape the page and automate clicks, but that is brittle and difficult for a person to audit.
 
-AidPath AI explores a safer pattern: use machine learning for what it is good at — interpreting free text — and explicit rules for what must remain auditable.
+AidPath Agent Bridge explores a different web architecture. The same site remains fully usable by a human, while WebMCP publishes stable, typed domain capabilities to an agent. The agent orchestrates; it does not invent the rules.
 
 ## What it does
 
-A user describes what kind of help they need and provides a few broad, non-identifying facts. AidPath AI then:
+AidPath is a privacy-first support-navigation prototype. A person describes a need and shares only a few broad facts. A small local classifier interprets the free-text intent, while an explicit deterministic rule engine evaluates illustrative support options and exposes every matched and missing condition.
 
-1. classifies the free-text need locally in the browser;
-2. shows the model’s category probabilities;
-3. evaluates transparent illustrative support-program conditions;
-4. ranks relevant options;
-5. shows every matched and missing requirement.
+The WebMCP extension lets an agent work with that same engine through six structured tools:
 
-The current demo covers housing, education, employment, health/access, caregiving, and food-support scenarios.
+1. `list_support_options`
+2. `analyze_support_case`
+3. `explain_support_option`
+4. `compare_support_options`
+5. `load_demo_case`
+6. `prepare_next_step_checklist`
 
-## How we built it
+This means an agent does not need to infer field semantics or scrape result cards. It can ask the site itself for the supported capabilities and call them using typed JSON inputs.
 
-The application is a zero-dependency static web app built with HTML, CSS, and JavaScript.
+## Why WebMCP is a strong fit
 
-The ML layer is a Multinomial Naive Bayes text classifier implemented directly in the browser with tokenization, Laplace smoothing, log-probability scoring, and normalized class probabilities. The training examples are visible in the source.
+Without WebMCP, an agent has to reverse-engineer a human interface: locate controls, infer what each field means, scrape result text, and repeat those assumptions whenever the UI changes.
 
-The decision layer is separate: each illustrative support program contains named deterministic conditions. Model confidence never satisfies or overrides a condition; it is used only as an interpretation/ranking signal.
+With WebMCP, AidPath exposes the *intent* of the product directly. The browser can discover tools with explicit descriptions and JSON Schemas. Read-only operations are annotated as read-only. Tool results come from the same deterministic functions used by the visible UI.
 
-The entire application runs client-side on GitHub Pages. There is no backend, external model API, analytics SDK, login, or application-created persistence.
+Most importantly, agent actions remain human-verifiable. Analysis updates the visible workbench and checklist actions appear in the on-screen activity log. WebMCP improves agent reliability without removing human oversight.
 
-## Challenges we ran into
+## How it creates a better user experience
 
-The main design challenge was not maximizing model complexity; it was defining where AI should stop. Eligibility-like workflows need transparency, predictable behavior, and a way for users to understand why a result appeared. That led to the two-layer architecture and the explicit matched/missing-condition UI.
+A person can begin in either direction:
 
-We also optimized the prototype for reproducibility: zero runtime dependencies, a public repository, deterministic rules, and no API credentials needed to test the project.
+- **Human first:** fill the visible form, inspect results, and then ask an agent to compare or explain options.
+- **Agent assisted:** ask the agent to load a safe demo or analyze structured facts, then inspect and correct the visible result before taking any real-world action.
 
-## Accomplishments that we're proud of
+The agent and human are no longer operating two separate workflows. They share one rule engine and one auditable state.
 
-- A real ML classifier runs entirely on-device in the browser.
-- No user-entered support-seeking data leaves the page.
-- Every recommendation can be inspected condition by condition.
-- The architecture separates probabilistic interpretation from deterministic decision logic.
-- The application is responsive and publicly deployable with zero secrets or runtime dependencies.
-- Mobile Lighthouse audit: Accessibility 96, Best Practices 100, SEO 100, Agentic Browsing 100.
+## What people and agents can do together that was difficult before
 
-## What we learned
+A person can retain control of sensitive facts while delegating repetitive reasoning tasks such as listing options, comparing alternatives, surfacing missing conditions, and preparing a next-step checklist. The agent receives structured evidence instead of guessing from pixels or DOM text, and the person sees the resulting state.
 
-Responsible AI architecture can be more important than adding a larger model. In sensitive workflows, using a smaller transparent model plus an auditable rule layer can create a more trustworthy and reproducible product than a single generative black box.
+## How WebMCP was implemented
 
-## What's next
+The challenge build uses the WebMCP Imperative API:
 
-A production version would replace illustrative programs with verified official rules stored in a versioned policy schema. Each rule would include jurisdiction, official source URL, effective date, evidence requirements, and a human-reviewed change history. The core invariant would remain: **AI may interpret language; auditable rules decide.**
+```js
+await document.modelContext.registerTool({
+  name: "analyze_support_case",
+  description: "Analyze a structured support case using local interpretation and deterministic rules.",
+  inputSchema: { /* typed JSON Schema */ },
+  annotations: { readOnlyHint: false },
+  execute: async (input) => { /* shared rule engine + visible UI update */ }
+});
+```
+
+Six tools are registered. Read-only discovery/explanation/comparison tools use `readOnlyHint: true`; actions that intentionally stage or update visible state use `readOnlyHint: false`. The app feature-detects `document.modelContext`, so the normal human experience continues to work in browsers without WebMCP.
+
+## Technical architecture
+
+- Static HTML/CSS/JavaScript; no backend and no runtime secrets.
+- Local free-text intent classifier.
+- Deterministic and inspectable support-rule engine.
+- Typed WebMCP tool layer over the same domain functions.
+- Human-visible agent activity log.
+- GitHub Pages HTTPS deployment.
+- MIT licensed public repository.
+
+## Responsible design
+
+The model or agent never decides eligibility. The prototype programs are deliberately illustrative and are not legal, financial, benefits, medical, or government advice. A production version would replace them with verified official rule sources carrying jurisdiction, effective dates, version history, and human-reviewed updates.
+
+No user-entered profile is persisted by the application after refresh.
+
+## New work during the WebMCP Challenge
+
+The initial AidPath prototype was created on September 2, 2026, during the WebMCP Challenge submission period. The dedicated WebMCP extension adds `webmcp.html`, six registered WebMCP tools, typed schemas and annotations, WebMCP feature detection, shared human/agent state, visible execution logging, challenge-specific documentation, and a public license. The Git commit history provides timestamped evidence.
+
+## QA
+
+The live WebMCP build was tested at the domain-engine and browser layers:
+
+- GitHub Pages deployment: PASS
+- Deterministic student-renter case: PASS
+- Six-tool registration against a `document.modelContext.registerTool` test surface: 6/6 PASS
+- Tool execution: listing, analysis, comparison, checklist PASS
+- Visible agent activity logging: PASS
+- Lighthouse desktop: Accessibility 100, Best Practices 100, SEO 100, Agentic Browsing 100
 
 ## Built with
 
-HTML, CSS, JavaScript, Multinomial Naive Bayes, deterministic rule engine, GitHub Pages
+WebMCP Imperative API, HTML, CSS, JavaScript, local text classification, deterministic rule engine, GitHub Pages
 
 ## Links
 
-- Live demo: https://senih25.github.io/aidpath-ai/
-- Source: https://github.com/senih25/aidpath-ai
+- Live WebMCP demo: https://senih25.github.io/aidpath-ai/webmcp.html
+- Public source: https://github.com/senih25/aidpath-ai
+- License: https://github.com/senih25/aidpath-ai/blob/main/LICENSE
