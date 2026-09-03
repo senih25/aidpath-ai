@@ -8,6 +8,21 @@
 
 The challenge entry point is `webmcp.html`. It is a standalone static application that can be hosted on any HTTPS static host, including GitHub Pages.
 
+Live: `https://senih25.github.io/aidpath-ai/webmcp.html`
+
+## Judge quick test — native WebMCP
+
+Validated on September 3, 2026 with Chrome 151 on Windows using Chrome's native WebMCP API: **6/6 tools discovered and 6/6 executed successfully**.
+
+1. Open `chrome://flags/#enable-webmcp-testing` in Chrome.
+2. Set **WebMCP for testing** to **Enabled** and relaunch Chrome.
+3. Open the live challenge app above.
+4. Confirm the header reports `WebMCP active · 6 tools`.
+5. Ask a WebMCP-capable agent to: list support options → load the `student` demo → analyze it → compare `student_bridge` with `housing_relief` → prepare the housing checklist.
+6. Expected evidence: **Student Stability Bridge 3/3** is the top deterministic result; **Housing Stability Support 2/3** is missing `Core documents ready`; the visible activity log records agent analysis/checklist activity.
+
+Direct browser verification is also possible with `document.modelContext.getTools()` and `document.modelContext.executeTool(...)`. Full native acceptance evidence is in [`docs/QA.md`](docs/QA.md).
+
 ## Why WebMCP
 
 Public-service and benefits websites often contain complex forms and rule-heavy flows. A generic browser agent has to infer labels, scrape rendered text, click controls, and hope the interface has not changed. AidPath publishes explicit capabilities instead.
@@ -61,11 +76,11 @@ Then open:
 http://localhost:8080/webmcp.html
 ```
 
-WebMCP itself requires a supporting browser context. For local Chrome testing, follow the current Chrome WebMCP documentation and enable the WebMCP testing flag/origin-trial mechanism as applicable.
+WebMCP itself requires a supporting browser context. For local Chrome testing, enable `chrome://flags/#enable-webmcp-testing`, relaunch Chrome, and open the app from a supported context.
 
 ## Challenge judging alignment
 
-- **WebMCP Leverage:** six non-trivial typed tools sharing one deterministic domain engine.
+- **WebMCP Leverage:** six non-trivial typed tools sharing one deterministic domain engine; native Chrome discovery and execution verified 6/6.
 - **Execution:** complete responsive human UI with WebMCP feature detection, fallbacks, visible results, and activity logging.
 - **Potential Impact:** replaces fragile UI scraping in a high-friction, rule-heavy public-service navigation problem.
 - **Creativity & Ambition:** separates agent orchestration from authoritative decision logic, allowing humans and agents to collaborate without giving the LLM authority to invent rules.
