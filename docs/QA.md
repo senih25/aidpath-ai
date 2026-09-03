@@ -1,33 +1,76 @@
 # QA Evidence
 
-Validated on the deployed GitHub Pages build on 2026-09-03.
+Validated on the deployed WebMCP challenge build on 2026-09-03.
 
-## Functional checks
+## Native Chrome WebMCP acceptance
 
-- Student renter preset loads structured facts correctly.
-- Student scenario classifies primarily as housing and produces transparent program matches.
-- Student Housing Bridge displays 4/5 matched conditions and the missing residency-document condition.
-- Learning Access Grant displays 4/4 matched conditions in the student scenario.
-- Caregiver preset updates inputs and classifies as caregiving.
-- Caregiver Relief Support displays 4/4 matched conditions.
-- Access & Mobility Fund displays 4/4 matched conditions in the caregiver/access scenario.
-- No application JavaScript errors observed during interaction.
+Environment: Windows 10/11, Chrome 151, secure GitHub Pages origin, `chrome://flags/#enable-webmcp-testing` set to **Enabled** and Chrome relaunched.
 
-## Network/privacy check
+- `document.modelContext.registerTool` is available: **PASS**
+- Page status reports `WebMCP active · 6 tools`: **PASS**
+- `await document.modelContext.getTools()` discovers all six registered tools: **6/6 PASS**
+- Native `document.modelContext.executeTool(...)` execution: **6/6 PASS**
 
-The deployed application loads as a single document with no application API, analytics, model, stylesheet, or JavaScript network dependency. The only observed 404 was the browser's optional request for `/favicon.ico`; it does not affect application behavior.
+Executed tools:
 
-## Responsive check
+1. `list_support_options` — PASS
+2. `load_demo_case` — PASS
+3. `analyze_support_case` — PASS
+4. `explain_support_option` — PASS
+5. `compare_support_options` — PASS
+6. `prepare_next_step_checklist` — PASS
 
-Verified at desktop 1440×900 and mobile 390×844 viewports. Primary workflow, form controls, result cards, decision-logic section, and privacy section remain accessible.
+## Deterministic student-case result
 
-## Lighthouse — mobile
+Acceptance profile:
 
-- Accessibility: **96**
-- Best Practices: **100**
-- SEO: **100**
-- Agentic Browsing: **100**
+- age: 22
+- income: low
+- student: true
+- housing pressure: true
+- documents ready: false
 
-## Reproducibility
+Observed result through native WebMCP execution:
 
-No build step, package manager, API key, or external runtime dependency is required. Serve `index.html` from any static web server or open the deployed GitHub Pages URL.
+- intent signal: `housing`
+- top option: **Student Stability Bridge**
+- top deterministic match: **3/3**
+- **Housing Stability Support**: **2/3**, with `Core documents ready` as the explicit missing condition
+- comparison ranks `student_bridge` ahead of `housing_relief`
+- checklist output: `Verify or provide: Core documents ready`
+
+The visible workbench updated after agent execution and the activity log recorded registration, demo loading, analysis, and checklist activity.
+
+## Tool-contract checks
+
+- Every tool exposes a typed JSON Schema.
+- Discovery, explanation, and comparison operations use `readOnlyHint: true`.
+- Tools that intentionally update visible state use `readOnlyHint: false`.
+- Tool results come from the same deterministic JavaScript rule engine used by the human UI.
+- No tool grants the model authority to invent or override support rules.
+
+## Browser fallback
+
+When WebMCP is unavailable, the page remains usable as a normal human-facing website and reports that the WebMCP capability is unavailable. This is intentional progressive enhancement rather than a hard dependency.
+
+## Privacy / runtime architecture
+
+- Static HTML/CSS/JavaScript challenge app.
+- No backend, account, database, API key, analytics integration, or persisted user profile.
+- User-entered data remains in page memory and is cleared on refresh.
+- Programs are explicitly illustrative; the prototype does not claim real-world eligibility.
+
+## Reproduce the judge test
+
+1. In Chrome, open `chrome://flags/#enable-webmcp-testing`.
+2. Set **WebMCP for testing** to **Enabled** and relaunch Chrome.
+3. Open `https://senih25.github.io/aidpath-ai/webmcp.html`.
+4. Confirm the header reports `WebMCP active · 6 tools`.
+5. Ask a WebMCP-capable agent to list options, load the `student` demo, analyze it, compare `student_bridge` with `housing_relief`, and prepare the housing checklist.
+6. Confirm the deterministic results above and inspect the visible activity log.
+
+For direct browser verification, `document.modelContext.getTools()` returns the six tool contracts and `document.modelContext.executeTool(tool, JSON.stringify(args))` executes the selected tool using Chrome's native WebMCP API.
+
+## Result
+
+**Challenge WebMCP acceptance: PASS — native discovery 6/6, native execution 6/6, visible human-agent state synchronization PASS.**
