@@ -82,14 +82,21 @@ The initial AidPath prototype was created on September 2, 2026, during the WebMC
 
 ## QA
 
-The live WebMCP build was tested at the domain-engine and browser layers:
+The deployed HTTPS WebMCP build was validated on September 3, 2026 in Chrome 151 on Windows with `chrome://flags/#enable-webmcp-testing` enabled and Chrome relaunched.
 
-- GitHub Pages deployment: PASS
-- Deterministic student-renter case: PASS
-- Six-tool registration against a `document.modelContext.registerTool` test surface: 6/6 PASS
-- Tool execution: listing, analysis, comparison, checklist PASS
-- Visible agent activity logging: PASS
-- Lighthouse desktop: Accessibility 100, Best Practices 100, SEO 100, Agentic Browsing 100
+- GitHub Pages deployment: **PASS**
+- `document.modelContext.registerTool` available: **PASS**
+- Native `document.modelContext.getTools()` discovery: **6/6 PASS**
+- Native `document.modelContext.executeTool(...)` execution: **6/6 PASS**
+- Executed tools: listing, demo load, analysis, explanation, comparison, checklist: **PASS**
+- Deterministic student case: **Student Stability Bridge 3/3** top result: **PASS**
+- Housing comparison: **Housing Stability Support 2/3**, missing `Core documents ready`: **PASS**
+- Visible agent activity logging and UI synchronization: **PASS**
+- No application JavaScript errors observed during native WebMCP acceptance: **PASS**
+- Public unauthenticated repo access with MIT license visible: **PASS**
+- Public unauthenticated live app access with native six-tool discovery/execution: **PASS**
+
+Full reproduction steps and observed outputs are documented in [`docs/QA.md`](docs/QA.md).
 
 ## Built with
 
