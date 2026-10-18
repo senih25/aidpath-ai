@@ -39,7 +39,9 @@ const document = {
 vm.runInNewContext(blocks[0][1], {
   document, window: {}, console: { error: (...args) => errors.push(args.map(String).join(" ")) }
 }, { timeout: 4000, filename: "aidpath-webmcp.html" });
-for (let i = 0; i < 12; i++) await Promise.resolve();
+for (let i = 0; i < 30 && registry.size < 6 && errors.length === 0; i++) {
+  await new Promise(resolve => setImmediate(resolve));
+}
 assert.deepEqual(errors, [], "registration errors");
 const names = [
   "list_support_options", "analyze_support_case", "explain_support_option",
