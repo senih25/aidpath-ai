@@ -7,7 +7,7 @@ import { runInNewContext } from "node:vm";
 // external AI providers, actual browser registration or personal data.
 const html = readFileSync(new URL("../webmcp.html", import.meta.url), "utf8");
 assert.match(html, /<meta\s+name="viewport"\s+content="width=device-width,initial-scale=1">/);
-const breakpoints = [...html.matchAll(/@media\\s*\\(\\s*max-width:\\s*(\\d{2,4})px\\s*\\)/gi)].map((match) => Number(match[1]));
+const breakpoints = [...html.matchAll(/@media\s*\(\s*max-width:\s*(\d{2,4})px\s*\)/gi)].map((match) => Number(match[1]));
 assert.ok(breakpoints.some((size) => size <= 600), "Mobile CSS breakpoint missing");
 assert.ok(breakpoints.some((size) => size >= 760), "Tablet/mobile layout breakpoint missing");
 const snippet = html.match(/<script>([\s\S]*?)<\/script>/i)?.[1];
