@@ -1,0 +1,37 @@
+name: G10 six-tool WebMCP synthetic contract tests
+
+on:
+  pull_request:
+    paths:
+      - "webmcp.html"
+      - "test/webmcp-contract.mjs"
+      - ".github/workflows/g10-webmcp-contract.yml"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: Node 24 / synthetic offline WebMCP contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            webmcp.html
+            test/webmcp-contract.mjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: JavaScript syntax
+        run: node --check test/webmcp-contract.mjs
+      - name: Simulated WebMCP registration and six sample tool calls
+        run: node test/webmcp-contract.mjs
