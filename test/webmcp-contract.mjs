@@ -10,6 +10,9 @@ assert.match(html, /<meta\s+name="viewport"\s+content="width=device-width,initia
 const breakpoints = [...html.matchAll(/@media\s*\(\s*max-width:\s*(\d{2,4})px\s*\)/gi)].map((match) => Number(match[1]));
 assert.ok(breakpoints.some((size) => size <= 600), "Mobile CSS breakpoint missing");
 assert.ok(breakpoints.some((size) => size >= 760), "Tablet/mobile layout breakpoint missing");
+assert.match(html, /WebMCP unavailable in this browser/, "Accessible fallback status missing");
+assert.match(html, /Illustrative prototype only; verify official criteria before acting\./,
+  "Non-official prototype disclaimer missing");
 const snippet = html.match(/<script>([\s\S]*?)<\/script>/i)?.[1];
 assert.ok(snippet, "Expected the single inline WebMCP script");
 
